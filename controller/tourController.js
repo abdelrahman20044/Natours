@@ -18,7 +18,7 @@ const AppError = require('../utils/appError');
 //   }
 //   next();
 // };
-exports.checkBody = (req, res, next) => {
+/*exports.checkBody = (req, res, next) => {
   //if (req.body.name == null || req.body.price == null) {
   if (!req.body.name || !req.body.price) {
     return res.status(404).json({
@@ -27,7 +27,7 @@ exports.checkBody = (req, res, next) => {
     });
   }
   next();
-};
+};*/
 
 exports.aliasTopTours = (req, res, next) => {
   req.query.limit = '5';
@@ -36,6 +36,7 @@ exports.aliasTopTours = (req, res, next) => {
   next();
 };
 exports.GetAllTours = catchAsync(async (req, res, next) => {
+  console.log(req.query);
   const features = new APIFeatures(Tour.find(), req.query)
     .filter()
     .sort()
@@ -101,10 +102,11 @@ exports.CreateNewTour = catchAsync(async (req, res, next) => {
 
 exports.getTourStats = catchAsync(async (req, res, next) => {
   const stats = await Tour.aggregate([
-    { $match: { ratingsAverage: { $gte: 4.5 } } },
+    { $match: { ratingsAverage: { $gte: 4.5 } } }, // match only the documents that meet the specified condition
     {
       $group: {
-        _id: '$difficulty',
+        // group the documents by the specified _id expression and apply the accumulator expressions to each group.
+        _id: '$difficulty', // group by difficulty
         numTours: { $sum: 1 }, // add 1 for each document
         numRaiting: { $sum: '$ratingsQuantity' },
         avgRating: { $avg: '$ratingsAverage' },
@@ -131,7 +133,7 @@ exports.getMonthlyPlan = catchAsync(async (req, res, next) => {
   const year = req.params.year * 1;
   const plane = await Tour.aggregate([
     {
-      $unwind: '$startDates',
+      $unwind: '$startDates', //deconstruct an array field from the info documents and then output one document for each element of the array.
     },
     {
       $match: {
@@ -169,3 +171,11 @@ exports.getMonthlyPlan = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+// ✅ catchAsync executes at STARTUP (when files load)
+// ✅ catchAsync creates wrapper functions
+// ✅ Wrapper functions are stored in exports.*
+// ✅ Routes register with wrapper functions
+// ✅ When request comes, wrapper is called (NOT catchAsync)
+// ✅ Wrapper calls the original async function
+// ✅ If error, wrapper catches it and calls next(error)

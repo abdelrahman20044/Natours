@@ -11,6 +11,8 @@ class ApiFeatures {
     excludedFields.forEach((el) => delete queryobj[el]);
     // Advanced filtering
     let querystr = JSON.stringify(queryobj);
+    // \b stands for word boundary , it makes sure that we only replace the exact words gt, gte, lt, lte and not something like "gtx"
+    // g stands for global (ie replace all the instances)
     querystr = querystr.replace(/\b(gt|gte|lt|lte)\b/g, (match) => `$${match}`);
     // Create the initial query (without awaiting it yet!)
     this.query = this.query.find(JSON.parse(querystr)); // find with no argu return all documents

@@ -13,7 +13,12 @@ const handleValidationErrorDB = (err) => {
   const message = `Invalid input data. ${errors.join('. ')}`;
   return new AppError(message, 400);
 };
-
+const handleJsonWebTokenError = () => {
+  return new AppError('invalid token please login again', 401);
+};
+const handleTokenExpiredError = () => {
+  return new AppError('Expired token login again', 401);
+};
 const sendErrorDev = (err, res) => {
   res.status(err.statusCode).json({
     status: err.status,
@@ -53,6 +58,8 @@ module.exports = (err, req, res, next) => {
     if (error.name == 'CastError') error = handleCastErrorDB(error); // InvaildID
     if (error.code == 11000) error = handleDuplicateFieldsDB(error); //not_unique
     if (error.name == 'ValidationError') error = handleValidationErrorDB(error); //notInTheRangeOfValuesInTheModel
+    if (error.name == 'JsonWebTokenError') error = handleJsonWebTokenError();
+    if (error.name == 'TokenExpiredError') error = handleTokenExpiredError();
 
     sendErrorProd(error, res);
   }

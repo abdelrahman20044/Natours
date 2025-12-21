@@ -24,6 +24,7 @@ const tourSchema = new mongoose.Schema(
       type: String,
       required: [true, 'A tour must have a difficulty'],
       enum: {
+        // only for strings
         values: ['difficult', 'medium', 'easy'],
         messages: 'difficulty is either easy, medium or hard',
       },
@@ -78,11 +79,12 @@ const tourSchema = new mongoose.Schema(
   },
 
   {
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
+    toJSON: { virtuals: true }, //each time that the data is actually outputted as JSON, we want virtuals to be true. // basically the virtuals to be part of the output.
+    toObject: { virtuals: true }, //when the data gets outputted as an object.
   },
 );
 tourSchema.virtual('durationWeeks').get(function () {
+  // not part of db we can't use it as a query
   return this.duration / 7;
 });
 //Document Middleware run Before or after .save() and .create()
@@ -96,6 +98,9 @@ tourSchema.pre('save', function (next) {
 //   next();
 // });
 
+// query Middleware
+// this points to the current query
+// excuted before const tours = await features.query in GetAllTours
 tourSchema.pre(/^find/, function (next) {
   // /^find/  means any query start with find like find findMany findOne
   this.find({ secretTour: { $ne: true } });
@@ -108,6 +113,9 @@ tourSchema.post(/^find/, function (docs, next) {
   next();
 });
 tourSchema.pre('aggregate', function (next) {
+  // pipeline is an array of all the aggregation stages in the current aggregation
+  // we add a match stage at the beginning to exclude secret tours
+  // unshift add the element to the beginning of the array
   this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
   next();
 });

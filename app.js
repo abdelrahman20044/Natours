@@ -12,12 +12,9 @@ if (process.env.NODE_ENV === 'development') {
 }
 app.use(express.json());
 app.use(express.static(`${__dirname}/public`));
-/*app.use((req, res, next) => {
-  console.log('helloo');
-  next();
-});*/
+
 app.use((req, res, next) => {
-  req.requestTime = new Date().toISOString();
+  req.requestTime = new Date().toISOString(); // new date = right now   ,  toISOString = convert it to a readable string
   next();
 });
 
@@ -26,7 +23,7 @@ app.use((req, res, next) => {
 //3) routes
 
 app.use('/api/v1/tours', tourRouter);
-app.use('/api/v1/user', userRouter);
+app.use('/api/v1/users', userRouter);
 app.all('*', (req, res, next) => {
   // res.status(404).json({
   //   status: 'fail',
