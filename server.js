@@ -7,6 +7,7 @@ process.on('uncaughtException', (err) => {
   // we don't need server.close here because server have nothing to do with sync errors
   process.exit(1); // Exit the process
 });
+
 dotenv.config({ path: './config.env' }); // read our variables from the file and save them into nodejs environment variable
 const DB = process.env.DATABASE.replace(
   '<PASSWORD>',
