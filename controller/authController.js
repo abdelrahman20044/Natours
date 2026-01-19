@@ -11,9 +11,22 @@ const signToken = (id) => {
     expiresIn: process.env.EXPIRES_IN,
   });
 };
+const cookieOptions = {
+  expires: new Date(
+    Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000,
+  ),
+  httpOnly: true, // cookie cannot be accesed or modified in any way by the browser to prevent (xss)
+  // when browser see httponly = true it will receive the cookie store it and send it with every req
+};
 
+if (process.env.NODE_ENV == 'production') cookieOptions.secure = true; // cookie will only be sent in encrypted connection (HTTPS)
 const createSendToken = (user, statusCode, res) => {
   const token = signToken(user._id);
+  res.cookie('jwt', token, cookieOptions);
+
+  // Remove sensitive fields from output
+  user.password = undefined;
+  user.active = undefined;
 
   res.status(statusCode).json({
     status: 'success',
@@ -47,11 +60,8 @@ exports.login = catchAsync(async (req, res, next) => {
   if (!user || !(await user.correctPassword(password, user.password))) {
     return next(new AppError('Invalid email or password', 401));
   }
-  const token = signToken(user._id);
-  res.status(200).json({
-    status: 'success',
-    token,
-  });
+
+  createSendToken(user, 200, res);
 });
 
 exports.protected = catchAsync(async (req, res, next) => {
@@ -183,9 +193,5 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
   user.passwordConfirm = passwordConfirm;
   await user.save();
   // 4) log user in , send JWT
-  const token = signToken(user._id);
-  res.status(200).json({
-    status: 'success',
-    token,
-  });
+  createSendToken(user, 200, res);
 });
